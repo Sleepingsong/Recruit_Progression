@@ -16,52 +16,20 @@ db_name = 'Recruit_Database.db'
 def Import():
     db_name = 'Recruit_Database.db'
 
-    # if "\\" in File_path.get():
-    #     New_Path = str(File_path.get()).replace("\\","/")
-    #     file_Path = os.path.abspath(New_Path)
-    #     doc = docx.Document(file_Path)
-    #     Role = doc.paragraphs[0].text
-    #     print(len(doc.paragraphs[2].runs[5].text))
-    #     Type = doc.paragraphs[2].runs[5].text
-    #     Para3 = (len(doc.paragraphs[3].runs))
-    #     print(Para3)
-    #     Location = doc.paragraphs[3].runs[2].text + doc.paragraphs[3].runs[Para3].text
-    #     Email = Assign.get()
-    #     Status = "New"
-    #     Record_list = [str(Date),
-    #                    Role,
-    #                    Type,
-    #                    Location,
-    #                    Email,
-    #                    str(Due_Date),
-    #                    Status]
-    #     print(Record_list)
-    #     # con = sqlite3.connect(db_name)
-    #     # cur = con.cursor()
-    #     # cur.execute(
-    #     #     ' INSERT INTO Progression_Record(Date, Role, Type, Location, Assign_To, Due_Date, Status) VALUES(?,?,?,?,?,?,?)',
-    #     #     Record_list)
-    #     # con.commit()
-    #     # show_record()
-    #     File_path.delete(0,'end')
-    # else:
     file_Path = os.path.abspath(File_path.get())
     doc = docx.Document(file_Path)
-    print(len(doc.paragraphs[2].runs))
-    print(len(doc.paragraphs[3].runs))
-    print(doc.paragraphs[0].text)
-    Para2 = (len(doc.paragraphs[2].runs) - 1)
-    print(doc.paragraphs[2].runs[Para2].text)
-    Para3 = (len(doc.paragraphs[3].runs) - 1)
-    print(doc.paragraphs[3].runs[Para3].text)
-    if len(doc.paragraphs[3].runs) == 6:
-        Location = doc.paragraphs[3].runs[Para3 - 1].text + doc.paragraphs[3].runs[Para3].text
-        print(doc.paragraphs[3].runs[Para3 - 1].text + doc.paragraphs[3].runs[Para3].text)
-    if len(doc.paragraphs[3].runs) == 5:
-        Location = doc.paragraphs[3].runs[Para3].text
-        print(doc.paragraphs[3].runs[Para3].text)
     Role = doc.paragraphs[0].text
-    Type = doc.paragraphs[2].runs[Para2].text
+    Para2 = doc.paragraphs[2].text
+    new_para2 = re.sub('\s+', '', Para2)
+    Type = new_para2.split(":", 1)[1]
+    Para3 = doc.paragraphs[3].text
+    new_para3 = re.sub('\s+', '', Para3)
+    Location = new_para3.split(":", 1)[1]
+    if "BTS" in Location:
+        BTS = Location[0:3]
+        Station = Location[3:]
+        Location = BTS + " " + Station
+
     Email = Assign.get()
     Status = "New"
     Record_list = [str(Date),
@@ -80,7 +48,7 @@ def Import():
     con.commit()
     show_record()
     File_path.delete(0, 'end')
-    Assign.delete(0,'end')
+    Assign.delete(0, 'end')
 
 
 def get_path():
