@@ -50,6 +50,21 @@ def Import():
     File_path.delete(0, 'end')
     Assign.delete(0, 'end')
 
+def update_status():
+
+    Date = datetime.datetime.now().date()
+    con = sqlite3.connect('Recruit_Database.db')
+    con.row_factory = lambda cursor, row: row[0]
+    cur = con.cursor()
+    cur.execute('SELECT Due_Date FROM Progression_Record')
+    start_date = cur.fetchall()
+    for i in start_date:
+        date_str = datetime.datetime.strptime(i, '%Y-%m-%d').date()
+        if date_str < Date:
+            cur2 = con.cursor()
+            cur2.execute('UPDATE Progression_Record SET Status = ? WHERE Due_Date = ?', (Delay_Status, date_str))
+            con.commit()
+
 
 def get_path():
     word_file = filedialog.askopenfilename()
@@ -195,6 +210,11 @@ def Status_Search(event):
 
 Date = datetime.datetime.now().date()
 Due_Date = datetime.date.today() + datetime.timedelta(days=1)
+New_Status = 'New'
+Wp_Status = 'WIP'
+Delay_Status = 'Delay'
+
+
 Label(app, text="File Path: ").grid(row=0, column=0)
 File_path = tk.Entry(app, width=40)
 File_path.grid(row=0, column=1)
@@ -269,6 +289,7 @@ Status_search = tk.Entry(Search_frame)
 Status_search.bind('<KeyRelease>', Status_Search)
 Status_search.grid(row=1, column=5)
 
+update_status()
 show_record()
 
 app.geometry("1000x500")
