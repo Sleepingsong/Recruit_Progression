@@ -13,13 +13,14 @@ import smtplib
 from email.message import EmailMessage
 from validate_email import validate_email
 
-
-client = MongoClient("mongodb+srv://admin:admin@trackingprogressionsystem-yv211.gcp.mongodb.net/test?retryWrites=true&w=majority")
+client = MongoClient(
+    "mongodb+srv://admin:admin@trackingprogressionsystem-yv211.gcp.mongodb.net/test?retryWrites=true&w=majority")
 db = client['Progress_Tracking']
 Pro_record = db.Progression_Record
 Email_record = db.Email
 
 db_name = 'Recruit_Database.db'
+
 
 class Progression_Tracking_System(tk.Tk):
 
@@ -27,7 +28,7 @@ class Progression_Tracking_System(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         container = tk.Frame(self)
 
-        container.pack(side = "top" , fill = "both", expand = True)
+        container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
@@ -37,7 +38,7 @@ class Progression_Tracking_System(tk.Tk):
 
         self.frames[StartPage] = frame
 
-        frame.grid(row = 0 , column = 0 ,sticky = "nsew")
+        frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(StartPage)
 
@@ -71,16 +72,16 @@ class StartPage(tk.Frame):
         self.Export_but = tk.Button(self, text="Export as Excel", command=self.export_excel)
         self.Export_but.place(x=840, y=20)
 
-        self.refresh_but = tk.Button(self, text="Refresh List", command = self.show_record)
-        self.refresh_but.place(x= 770, y = 20)
+        self.refresh_but = tk.Button(self, text="Refresh List", command=self.show_record)
+        self.refresh_but.place(x=760, y=20)
 
-        self.Send_email_person = tk.Button(self, text="Send email\nindividually", command=self.send_email_one)
+        self.Send_email_person = tk.Button(self, text="Send email\nindividually", command=self.SendOne_confirmation)
         self.Send_email_person.place(x=760, y=382)
 
-        self.Send_email_All = tk.Button(self, text="Send email\nAll", command=self.send_email_all)
+        self.Send_email_All = tk.Button(self, text="Send email\nAll", command=self.SendAll_confirmation)
         self.Send_email_All.place(x=840, y=382)
 
-        self.Save_but = tk.Button(self, text="Save", command=self.Import)
+        self.Save_but = tk.Button(self, text="Save", command=self.Import_confirmation)
         self.Save_but.grid(row=0, column=5)
         self.set_email_but = tk.Button(self, text="Set Sender's Email", command=self.set_email)
         self.set_email_but.place(x=780, y=430)
@@ -104,6 +105,7 @@ class StartPage(tk.Frame):
         self.tree.column(4, width=200)
         self.tree.column(5, width=100)
         self.tree.column(6, width=100)
+        self.tree.bind('<Double-Button>', self.editing)
 
         Search_frame = LabelFrame(self, text="Searching")
         Search_frame.place(x=10, y=390)
@@ -147,21 +149,19 @@ class StartPage(tk.Frame):
         self.update_status()
         self.show_record()
 
-
     def receive_email_address(self):
-        self.EA = Email_record.find_one({},{"_id": 0, "Email_Address" :1})
-        self.EP = Email_record.find_one({},{"_id": 0, "Email_Password": 1})
+        self.EA = Email_record.find_one({}, {"_id": 0, "Email_Address": 1})
+        self.EP = Email_record.find_one({}, {"_id": 0, "Email_Password": 1})
         self.Email_Address = self.EA["Email_Address"]
         self.Email_Password = self.EP["Email_Password"]
         print(self.Email_Address)
-
 
     def set_email(self):
         self.sender_main = Toplevel()
         self.sender_main.title('Sender Email')
         self.sender_main.geometry("%dx%d+%d+%d" % (400, 120, 350, 300))
 
-        Label(self.sender_main, text = "Current Email: "+ self.Email_Address).place(x= 70 , y = 45)
+        Label(self.sender_main, text="Current Email: " + self.Email_Address).place(x=70, y=45)
 
         Label(self.sender_main, text="\tEmail Adrress: ").grid(row=1)
         self.Sender_email = tk.Entry(self.sender_main, width=30)
@@ -171,9 +171,9 @@ class StartPage(tk.Frame):
         self.Sender_Pass = tk.Entry(self.sender_main, width=30)
         self.Sender_Pass.grid(row=2, column=1)
 
-        con_but = tk.Button(self.sender_main, text="Save", width=6, height=1, command = self.update_email_address)
+        con_but = tk.Button(self.sender_main, text="Save", width=6, height=1, command=self.update_email_address)
         con_but.place(x=140, y=80)
-        can_but = tk.Button(self.sender_main, text="Cancel", width=6, height=1, command = self.sender_main.destroy)
+        can_but = tk.Button(self.sender_main, text="Cancel", width=6, height=1, command=self.sender_main.destroy)
         can_but.place(x=200, y=80)
 
         self.sender_main.focus_set()
@@ -182,33 +182,68 @@ class StartPage(tk.Frame):
 
     def update_email_address(self):
 
+        Email_ID = Email_record.find_one({}, {"_id": 1})
 
-        Email_ID = Email_record.find_one({},{"_id":1})
-
-        Email_record.update_one(Email_ID, { "$set":
-                                            { "Email_Address": self.Sender_email.get(),
-                                              "Email_Password": self.Sender_Pass.get()
-                                              }
-                                        }
-                            )
+        Email_record.update_one(Email_ID, {"$set":
+                                               {"Email_Address": self.Sender_email.get(),
+                                                "Email_Password": self.Sender_Pass.get()
+                                                }
+                                           }
+                                )
         self.receive_email_address()
         self.sender_main.destroy()
-    def send_email_one(self):
+
+    def SendOne_confirmation(self):
         try:
-            self.tree.item(self.tree.selection())['values'][1]
-        except IndexError as e:
-            messagebox.showwarning("Error", "Please select one employee")
-            return
+            self.confirmation = Toplevel()
+            self.confirmation.title("Confirm")
+            self.confirmation.geometry("%dx%d+%d+%d" % (300, 90, 300, 250))
+            recipient = self.tree.item(self.tree.selection())['values'][3]
+            Label(self.confirmation, text="Are you sure, you want to send email to\n" + recipient,
+                  font=("Helvetica", 12)).grid(row=0)
+            self.confirm_button = Button(self.confirmation, text="Yes", width=5,
+                                         command=self.send_email_one)
+            self.confirm_button.place(x=80, y=50)
+            self.cancel_button = Button(self.confirmation, text="No", width=5,
+                                        command=self.confirmation.destroy)
+            self.cancel_button.place(x=180, y=50)
+            self.confirmation.focus_set()
+            self.confirmation.grab_set()
+            self.confirmation.mainloop()
+        except:
+            messagebox.showerror("Error!", "Please select one row")
+            self.confirmation.destroy()
+
+    def SendAll_confirmation(self):
+        try:
+            self.confirmation = Toplevel()
+            self.confirmation.title("Confirm")
+            self.confirmation.geometry("%dx%d+%d+%d" % (320, 90, 300, 250))
+            Label(self.confirmation, text="Are you sure, you want to send email to them?", font=("Helvetica", 12)).grid(
+                row=0)
+            self.confirm_button = Button(self.confirmation, text="Yes", width=5,
+                                         command=self.send_email_all)
+            self.confirm_button.place(x=80, y=30)
+            self.cancel_button = Button(self.confirmation, text="No", width=5,
+                                        command=self.confirmation.destroy)
+            self.cancel_button.place(x=180, y=30)
+            self.confirmation.focus_set()
+            self.confirmation.grab_set()
+            self.confirmation.mainloop()
+        except:
+            messagebox.showerror("Error!", "Something is wrong")
+            self.confirmation.destroy()
+
+    def send_email_one(self):
         Date1 = datetime.datetime.strftime(self.Date, '%Y-%m-%d')
         recipient = self.tree.item(self.tree.selection())['values'][3]
         position = self.tree.item(self.tree.selection())['values'][0]
         location = self.tree.item(self.tree.selection())['values'][2]
         due_date = self.tree.item(self.tree.selection())['values'][4]
         with smtplib.SMTP('smtp.office365.com', 587) as smtp:
-
             smtp.ehlo()
             smtp.starttls()
-            smtp.login(self.Email_Address,self.Email_Password)
+            smtp.login(self.Email_Address, self.Email_Password)
 
             subject = 'Reminder on your assignment as of ' + Date1
             line1 = '====================================================================================================================='
@@ -221,8 +256,7 @@ class StartPage(tk.Frame):
             line2 = '====================================================================================================================='
             msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
 
-            smtp.sendmail((self.Email_Address, recipient, msg))
-
+            smtp.sendmail(self.Email_Address, recipient, msg)
 
     def send_email_all(self):
 
@@ -232,7 +266,8 @@ class StartPage(tk.Frame):
         Delay = Pro_record.find({"Status": "Delay"}, {"Assign_To": 1})
         for row in Delay:
             recipient = row["Assign_To"]
-            Delay2 = Pro_record.find({"Assign_To": row["Assign_To"], "Status" : "Delay"}, {"Role" :1, "Location": 1, "Due_Date" :1})
+            Delay2 = Pro_record.find({"Assign_To": row["Assign_To"], "Status": "Delay"},
+                                     {"Role": 1, "Location": 1, "Due_Date": 1})
             for i in Delay2:
                 content_email.insert(0, (i["Role"], i["Location"], i["Due_Date"]))
 
@@ -255,114 +290,157 @@ class StartPage(tk.Frame):
                 msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
 
                 smtp.sendmail(self.Email_Address, recipient, msg)
-        # con = sqlite3.connect(db_name)
-        # con.row_factory = lambda cursor, row: row[0]
-        # cur = con.cursor()
-        # cur.execute('SELECT DISTINCT Assign_To FROM Progression_Record WHERE Status = "Delay"')
-        # for row in cur.fetchall():
-        #     recipient = row
-        #     print(row)
-        #     con2 = sqlite3.connect(db_name)
-        #     cur2 = con2.cursor()
-        #     cur2.execute('SELECT Role,Location,Due_Date FROM Progression_Record WHERE Assign_To = ? and Status = "Delay"',
-        #                  (row,))
-        #     for i in cur2.fetchall():
-        #         content_email.insert(0, i)
-            # count = len(content_email)
-            # str1 = '\n'.join(map(str, content_email))
-            # body3 = str1.replace('(', '').replace(')', '').replace("'", '')
-            # content_email.clear()
-            # with smtplib.SMTP('smtp.office365.com', 587) as smtp:
-            #
-            #     smtp.ehlo()
-            #     smtp.starttls()
-            #     smtp.login(self.Email_Address, self.Email_Password)
-            #     subject = 'Reminder on your assignment as of ' + Date1
-            #     line1 = '=================================================================='
-            #     body1 = 'Dear Team,'
-            #     body2 = 'This is automatic email to remind you that the following opportunities are pending to fulfill and they are delayed.\n'
-            #     body4 = 'Looking for your cooperation in advance.  If you cannot fulfill within today, please report to your supervisor with the valid reason.'
-            #     body5 = 'Best Regards,'
-            #     body6 = 'Progress Tracking System'
-            #     line2 = '=================================================================='
-            #     msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
-            #
-            #     smtp.sendmail((self.Email_Address, recipient, msg))
 
+    def Import_confirmation(self):
 
+        self.confirmation = Toplevel()
+        self.confirmation.title("Confirm")
+        self.confirmation.geometry("%dx%d+%d+%d" % (300, 90, 300, 250))
+        Label(self.confirmation, text="Are you sure, you want to import this data?", font=("Helvetica", 12)).grid(row=0)
+        self.confirm_button = Button(self.confirmation, text="Yes", width=5,
+                                     command=self.Import)
+        self.confirm_button.place(x=80, y=30)
+        self.cancel_button = Button(self.confirmation, text="No", width=5,
+                                    command=self.confirmation.destroy)
+        self.cancel_button.place(x=180, y=30)
+        self.confirmation.focus_set()
+        self.confirmation.grab_set()
+        self.confirmation.mainloop()
 
     def Import(self):
-        db_name = 'Recruit_Database.db'
+        try:
+            file_Path = os.path.abspath(self.File_path.get())
+            doc = docx.Document(file_Path)
+            Role = doc.paragraphs[0].text
+            Para2 = doc.paragraphs[2].text
+            new_para2 = re.sub('\s+', '', Para2)
+            Type = new_para2.split(":", 1)[1]
+            Para3 = doc.paragraphs[3].text
+            new_para3 = re.sub('\s+', '', Para3)
+            Location = new_para3.split(":", 1)[1]
+            if "BTS" in Location:
+                BTS = Location[0:3]
+                Station = Location[3:]
+                Location = BTS + " " + Station
 
-        file_Path = os.path.abspath(self.File_path.get())
-        doc = docx.Document(file_Path)
-        Role = doc.paragraphs[0].text
-        Para2 = doc.paragraphs[2].text
-        new_para2 = re.sub('\s+', '', Para2)
-        Type = new_para2.split(":", 1)[1]
-        Para3 = doc.paragraphs[3].text
-        new_para3 = re.sub('\s+', '', Para3)
-        Location = new_para3.split(":", 1)[1]
-        if "BTS" in Location:
-            BTS = Location[0:3]
-            Station = Location[3:]
-            Location = BTS + " " + Station
+            Email = self.Assign.get()
+            Status = "New"
+            Record_list = {"Date": str(self.Date),
+                           "Role": Role,
+                           "Type": Type,
+                           "Location": Location,
+                           "Assign_To": Email,
+                           "Due_Date": str(self.Due_Date),
+                           "Status": Status}
+            print(Record_list)
+            Pro_record.insert_one(Record_list)
+            with smtplib.SMTP('smtp.office365.com', 587) as smtp:
+                smtp.ehlo()
+                smtp.starttls()
+                smtp.login(self.Email_Address, self.Email_Password)
+                date_str = str(self.Date)
+                due_date_str = str(self.Due_Date)
+                subject = 'The assignment as of ' + date_str
+                line1 = '====================================================================================================================='
+                body1 = 'Dear ' + Email
+                body2 = 'This is automatic email to assign you an assignment today\n'
+                body3 = '1. ' + Role + ', ' + Location + ', ' + due_date_str
+                body4 = 'Looking for your cooperation in advance.  If you cannot fulfill within due date time, there will be an email sending to remind you.'
+                body5 = 'Best Regards,'
+                body6 = 'Progress Tracking System'
+                line2 = '====================================================================================================================='
+                msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
 
-        Email = self.Assign.get()
-        Status = "New"
-        Record_list = {"Date"       :str(self.Date),
-                       "Role"       :Role,
-                       "Type"       :Type,
-                       "Location"   :Location,
-                       "Assign_To"  :Email,
-                       "Due_Date"   :str(self.Due_Date),
-                       "Status"     :Status}
-        print(Record_list)
-        Pro_record.insert_one(Record_list)
-        with smtplib.SMTP('smtp.office365.com', 587) as smtp:
-            smtp.ehlo()
-            smtp.starttls()
-            smtp.login(self.Email_Address, self.Email_Password)
-            date_str = str(self.Date)
-            due_date_str = str(self.Due_Date)
-            subject = 'The assignment as of ' + date_str
-            line1 = '====================================================================================================================='
-            body1 = 'Dear ' + Email
-            body2 = 'This is automatic email to assign you an assignment today\n'
-            body3 = '1. ' + Role + ', ' + Location + ', ' + due_date_str
-            body4 = 'Looking for your cooperation in advance.  If you cannot fulfill within due date time, there will be an email sending to remind you.'
-            body5 = 'Best Regards,'
-            body6 = 'Progress Tracking System'
-            line2 = '====================================================================================================================='
-            msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
+                smtp.sendmail(self.Email_Address, Email, msg)
 
-            smtp.sendmail(self.Email_Address, Email, msg)
+            self.show_record()
+            self.File_path.delete(0, 'end')
+            self.Assign.delete(0, 'end')
+        except:
+            messagebox.showerror("Error!", "Please make sure file path is correct")
+            self.confirmation.destroy()
+
+    def editing(self, event):
+        try:
+            self.tree.item(self.tree.selection())['values'][1]
+        except IndexError as e:
+            messagebox.showwarning("Error!", "Please select one row")
+            return
+
+        old_position = self.tree.item(self.tree.selection())['values'][0]
+        old_type = self.tree.item(self.tree.selection())['values'][1]
+        old_location = self.tree.item(self.tree.selection())['values'][2]
+        old_recipient = self.tree.item(self.tree.selection())['values'][3]
+        old_status = self.tree.item(self.tree.selection())['values'][5]
 
 
-        self.show_record()
-        self.File_path.delete(0, 'end')
-        self.Assign.delete(0, 'end')
+        name = self.tree.item(self.tree.selection())['text']
+        old_price = self.tree.item(self.tree.selection())['values'][1]
+
+        self.edit_main = Toplevel()
+        self.edit_main.title('Edit')
+        self.edit_main.geometry('500x300')
+
+        Label(self.edit_main, text='Current Role', font=("Helvetica", 14)).grid(row=0, column=1)
+        Pre_Role = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_position), font=("Helvetica", 14))
+        Pre_Role.grid(row=0, column=2)
+        Label(self.edit_main, text='New Role', font=("Helvetica", 14)).grid(row=1, column=1)
+        new_role = Text(self.edit_main, height=1, width=30, font=("Helvetica", 15))
+        new_role.grid(row=1, column=2)
+        new_role['wrap'] = 'none'
+        new_role.insert(END, old_position)
+
+        Label(self.edit_main, text='Current Type', font=("Helvetica", 14)).grid(row=2, column=1)
+        Pre_Type = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_type),
+                          font=("Helvetica", 14))
+        Pre_Type.grid(row=2, column=2)
+        Label(self.edit_main, text='New Type', font=("Helvetica", 14)).grid(row=3, column=1)
+        new_type = Text(self.edit_main, height=1, width=30, font=("Helvetica", 15))
+        new_type.grid(row=3, column=2)
+        new_type['wrap'] = 'none'
+        new_type.insert(END, old_type)
+
+        Label(self.edit_main, text='Current Location', font=("Helvetica", 14)).grid(row=4, column=1)
+        Pre_Location = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_location),
+                          font=("Helvetica", 14))
+        Pre_Location.grid(row=4, column=2)
+        Label(self.edit_main, text='New Type', font=("Helvetica", 14)).grid(row=5, column=1)
+        new_location = Text(self.edit_main, height=1, width=30, font=("Helvetica", 15))
+        new_location.grid(row=5, column=2)
+        new_location['wrap'] = 'none'
+        new_location.insert(END, old_location)
+
+
+
+        # Button(self.edit_main, text='ตกลง', font=("Helvetica", 14), width=8, height=1,
+        #        command=lambda: self.edit_record(new_price.get(1.0, 'end-1c'), new_name.get(1.0, 'end-1c'),
+        #                                         old_price, name)).grid(row=4, column=2, )
+        # Button(self.edit_main, text="ยกเลิก", font=("Helvetica", 14), width=8, height=1,
+        #        command=self.edit_main.destroy).grid(row=5, column=2)
+
+        self.edit_main.focus_set()
+        self.edit_main.grab_set()
+        self.edit_main.mainloop()
 
 
     def update_status(self):
         Date = datetime.datetime.now().date()
 
-        for i in Pro_record.find({}, {"_id" : 0, "Due_Date" :1}):
+        for i in Pro_record.find({}, {"_id": 0, "Due_Date": 1}):
             date_str = datetime.datetime.strptime(i["Due_Date"], '%Y-%m-%d').date()
             if date_str < Date:
-                Pro_record.update_one({"Due_Date" : i["Due_Date"]}, {"$set" : {"Status" : "Delay"}})
-
+                Pro_record.update_one({"Due_Date": i["Due_Date"]}, {"$set": {"Status": "Delay"}})
 
     def get_path(self):
         word_file = filedialog.askopenfilename()
         self.File_path.insert(0, word_file)
 
-
     def export_excel(self):
         excel_path = filedialog.askdirectory()
         list = []
-        for i in Pro_record.find({}, {"Date" : 1, "Role" : 1, "Type": 1, "Location": 1,"Assign_To": 1,"Due_Date" :1, "Status" :1}):
-            list.insert(0, (i["Date"],i["Role"],i["Type"],i["Location"],i["Assign_To"],i["Due_Date"],i["Status"]))
+        for i in Pro_record.find({}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+                                      "Status": 1}):
+            list.insert(0, (i["Date"], i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
         workbook = xlsxwriter.Workbook(excel_path + '/Test.xlsx')
         worksheet = workbook.add_worksheet("My sheet")
@@ -403,98 +481,94 @@ class StartPage(tk.Frame):
 
         workbook.close()
 
-
     def show_record(self):
         records = self.tree.get_children()
         for element in records:
             self.tree.delete(element)
-        for i in Pro_record.find({}, {"Date" : 1, "Role" : 1, "Type": 1, "Location": 1,"Assign_To": 1,"Due_Date" :1, "Status" :1}):
-            self.tree.insert('', 0, text=i["Date"], values = (i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
-
-
-
-    def Date_Search(self,event):
-        records = self.tree.get_children()
-        for element in records:
-            self.tree.delete(element)
-        rgx = re.compile('.*'+self.Date_search.get()+'.*', re.IGNORECASE)
-        for i in Pro_record.find({'Date':{'$regex': rgx}}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+        for i in Pro_record.find({}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
                                       "Status": 1}):
             self.tree.insert('', 0, text=i["Date"],
                              values=(i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
-
-    def Role_Search(self,event):
+    def Date_Search(self, event):
         records = self.tree.get_children()
         for element in records:
             self.tree.delete(element)
-        rgx = re.compile('.*'+self.Role_search.get()+'.*', re.IGNORECASE)
-        for i in Pro_record.find({'Role':{'$regex': rgx}}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
-                                      "Status": 1}):
+        rgx = re.compile('.*' + self.Date_search.get() + '.*', re.IGNORECASE)
+        for i in Pro_record.find({'Date': {'$regex': rgx}},
+                                 {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+                                  "Status": 1}):
             self.tree.insert('', 0, text=i["Date"],
                              values=(i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
-
-    def Type_Search(self,event):
+    def Role_Search(self, event):
         records = self.tree.get_children()
         for element in records:
             self.tree.delete(element)
-        rgx = re.compile('.*'+self.Type_search.get()+'.*', re.IGNORECASE)
-        for i in Pro_record.find({'Type':{'$regex': rgx}}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
-                                      "Status": 1}):
+        rgx = re.compile('.*' + self.Role_search.get() + '.*', re.IGNORECASE)
+        for i in Pro_record.find({'Role': {'$regex': rgx}},
+                                 {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+                                  "Status": 1}):
             self.tree.insert('', 0, text=i["Date"],
                              values=(i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
-
-    def Location_Search(self,event):
+    def Type_Search(self, event):
         records = self.tree.get_children()
         for element in records:
             self.tree.delete(element)
-        rgx = re.compile('.*'+self.Location_search.get()+'.*', re.IGNORECASE)
-        for i in Pro_record.find({'Location':{'$regex': rgx}}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
-                                      "Status": 1}):
+        rgx = re.compile('.*' + self.Type_search.get() + '.*', re.IGNORECASE)
+        for i in Pro_record.find({'Type': {'$regex': rgx}},
+                                 {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+                                  "Status": 1}):
             self.tree.insert('', 0, text=i["Date"],
                              values=(i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
-
-    def Email_Search(self,event):
+    def Location_Search(self, event):
         records = self.tree.get_children()
         for element in records:
             self.tree.delete(element)
-        rgx = re.compile('.*'+self.Email_search.get()+'.*', re.IGNORECASE)
-        for i in Pro_record.find({'Assign_To':{'$regex': rgx}}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
-                                      "Status": 1}):
+        rgx = re.compile('.*' + self.Location_search.get() + '.*', re.IGNORECASE)
+        for i in Pro_record.find({'Location': {'$regex': rgx}},
+                                 {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+                                  "Status": 1}):
             self.tree.insert('', 0, text=i["Date"],
                              values=(i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
-
-    def Due_Search(self,event):
+    def Email_Search(self, event):
         records = self.tree.get_children()
         for element in records:
             self.tree.delete(element)
-        rgx = re.compile('.*'+self.Due_search.get()+'.*', re.IGNORECASE)
-        for i in Pro_record.find({'Due_Date':{'$regex': rgx}}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
-                                      "Status": 1}):
+        rgx = re.compile('.*' + self.Email_search.get() + '.*', re.IGNORECASE)
+        for i in Pro_record.find({'Assign_To': {'$regex': rgx}},
+                                 {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+                                  "Status": 1}):
             self.tree.insert('', 0, text=i["Date"],
                              values=(i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
-    def Status_Search(self,event):
+    def Due_Search(self, event):
         records = self.tree.get_children()
         for element in records:
             self.tree.delete(element)
-        rgx = re.compile('.*'+self.Status_search.get()+'.*', re.IGNORECASE)
-        for i in Pro_record.find({'Status':{'$regex': rgx}}, {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
-                                      "Status": 1}):
+        rgx = re.compile('.*' + self.Due_search.get() + '.*', re.IGNORECASE)
+        for i in Pro_record.find({'Due_Date': {'$regex': rgx}},
+                                 {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+                                  "Status": 1}):
             self.tree.insert('', 0, text=i["Date"],
                              values=(i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
-
+    def Status_Search(self, event):
+        records = self.tree.get_children()
+        for element in records:
+            self.tree.delete(element)
+        rgx = re.compile('.*' + self.Status_search.get() + '.*', re.IGNORECASE)
+        for i in Pro_record.find({'Status': {'$regex': rgx}},
+                                 {"Date": 1, "Role": 1, "Type": 1, "Location": 1, "Assign_To": 1, "Due_Date": 1,
+                                  "Status": 1}):
+            self.tree.insert('', 0, text=i["Date"],
+                             values=(i["Role"], i["Type"], i["Location"], i["Assign_To"], i["Due_Date"], i["Status"]))
 
 
 app = Progression_Tracking_System()
 app.geometry("1000x500")
 app.title("Progression Tracking System")
 app.mainloop()
-
-
-
