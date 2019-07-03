@@ -225,24 +225,17 @@ class StartPage(tk.Frame):
 
 
     def send_email_all(self):
+
         Date1 = datetime.datetime.strftime(self.Date, '%Y-%m-%d')
-        delay_email = []
-        delay_info = []
         content_email = []
-        con = sqlite3.connect(db_name)
-        con.row_factory = lambda cursor, row: row[0]
-        cur = con.cursor()
-        cur.execute('SELECT DISTINCT Assign_To FROM Progression_Record WHERE Status = "Delay"')
-        for row in cur.fetchall():
-            recipient = row
-            print(row)
-            con2 = sqlite3.connect(db_name)
-            cur2 = con2.cursor()
-            cur2.execute('SELECT Role,Location,Due_Date FROM Progression_Record WHERE Assign_To = ? and Status = "Delay"',
-                         (row,))
-            for i in cur2.fetchall():
-                content_email.insert(0, i)
-            count = len(content_email)
+
+        Delay = Pro_record.find({"Status": "Delay"}, {"Assign_To": 1})
+        for row in Delay:
+            recipient = row["Assign_To"]
+            Delay2 = Pro_record.find({"Assign_To": row["Assign_To"], "Status" : "Delay"}, {"Role" :1, "Location": 1, "Due_Date" :1})
+            for i in Delay2:
+                content_email.insert(0, (i["Role"], i["Location"], i["Due_Date"]))
+
             str1 = '\n'.join(map(str, content_email))
             body3 = str1.replace('(', '').replace(')', '').replace("'", '')
             content_email.clear()
@@ -261,7 +254,40 @@ class StartPage(tk.Frame):
                 line2 = '=================================================================='
                 msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
 
-                smtp.sendmail((self.Email_Address, recipient, msg))
+                smtp.sendmail(self.Email_Address, recipient, msg)
+        # con = sqlite3.connect(db_name)
+        # con.row_factory = lambda cursor, row: row[0]
+        # cur = con.cursor()
+        # cur.execute('SELECT DISTINCT Assign_To FROM Progression_Record WHERE Status = "Delay"')
+        # for row in cur.fetchall():
+        #     recipient = row
+        #     print(row)
+        #     con2 = sqlite3.connect(db_name)
+        #     cur2 = con2.cursor()
+        #     cur2.execute('SELECT Role,Location,Due_Date FROM Progression_Record WHERE Assign_To = ? and Status = "Delay"',
+        #                  (row,))
+        #     for i in cur2.fetchall():
+        #         content_email.insert(0, i)
+            # count = len(content_email)
+            # str1 = '\n'.join(map(str, content_email))
+            # body3 = str1.replace('(', '').replace(')', '').replace("'", '')
+            # content_email.clear()
+            # with smtplib.SMTP('smtp.office365.com', 587) as smtp:
+            #
+            #     smtp.ehlo()
+            #     smtp.starttls()
+            #     smtp.login(self.Email_Address, self.Email_Password)
+            #     subject = 'Reminder on your assignment as of ' + Date1
+            #     line1 = '=================================================================='
+            #     body1 = 'Dear Team,'
+            #     body2 = 'This is automatic email to remind you that the following opportunities are pending to fulfill and they are delayed.\n'
+            #     body4 = 'Looking for your cooperation in advance.  If you cannot fulfill within today, please report to your supervisor with the valid reason.'
+            #     body5 = 'Best Regards,'
+            #     body6 = 'Progress Tracking System'
+            #     line2 = '=================================================================='
+            #     msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
+            #
+            #     smtp.sendmail((self.Email_Address, recipient, msg))
 
 
 

@@ -77,7 +77,7 @@ class StartPage(tk.Frame):
         self.Send_email_person = tk.Button(self, text="Send email\nindividually", command=self.send_email_one)
         self.Send_email_person.place(x=760, y=382)
 
-        self.Send_email_All = tk.Button(self, text="Send email\nAll",state = DISABLED, command=self.send_email_all)
+        self.Send_email_All = tk.Button(self, text="Send email\nAll", command=self.send_email_all)
         self.Send_email_All.place(x=840, y=382)
 
         self.Save_but = tk.Button(self, text="Save", command=self.Import)
@@ -221,28 +221,21 @@ class StartPage(tk.Frame):
             line2 = '====================================================================================================================='
             msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
 
-            smtp.sendmail(self.Email_Address, recipient, msg)
+            smtp.sendmail((self.Email_Address, recipient, msg))
 
 
     def send_email_all(self):
+
         Date1 = datetime.datetime.strftime(self.Date, '%Y-%m-%d')
-        delay_email = []
-        delay_info = []
         content_email = []
-        con = sqlite3.connect(db_name)
-        con.row_factory = lambda cursor, row: row[0]
-        cur = con.cursor()
-        cur.execute('SELECT DISTINCT Assign_To FROM Progression_Record WHERE Status = "Delay"')
-        for row in cur.fetchall():
-            recipient = row
-            print(row)
-            con2 = sqlite3.connect(db_name)
-            cur2 = con2.cursor()
-            cur2.execute('SELECT Role,Location,Due_Date FROM Progression_Record WHERE Assign_To = ? and Status = "Delay"',
-                         (row,))
-            for i in cur2.fetchall():
-                content_email.insert(0, i)
-            count = len(content_email)
+
+        Delay = Pro_record.find({"Status": "Delay"}, {"Assign_To": 1})
+        for row in Delay:
+            recipient = row["Assign_To"]
+            Delay2 = Pro_record.find({"Assign_To": row["Assign_To"], "Status" : "Delay"}, {"Role" :1, "Location": 1, "Due_Date" :1})
+            for i in Delay2:
+                content_email.insert(0, (i["Role"], i["Location"], i["Due_Date"]))
+
             str1 = '\n'.join(map(str, content_email))
             body3 = str1.replace('(', '').replace(')', '').replace("'", '')
             content_email.clear()
