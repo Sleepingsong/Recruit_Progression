@@ -66,7 +66,7 @@ class StartPage(tk.Frame):
         self.Assign = tk.Entry(self, width=40)
         self.Assign.grid(row=0, column=4)
 
-        Label(self, text= "--- Double Click on row to edit the data ---").place(x = 10 , y =30)
+        Label(self, text="--- Double Click on row to edit the data ---").place(x=10, y=30)
 
         self.Import_but = tk.Button(self, text="Import", command=self.get_path)
         self.Import_but.grid(row=0, column=2)
@@ -108,7 +108,7 @@ class StartPage(tk.Frame):
         self.tree.column(5, width=100)
         self.tree.column(6, width=100)
         vsb = ttk.Scrollbar(Recoard_frame, orient='vertical', command=self.tree.yview)
-        self.tree.grid(row=0, sticky = 'nsew')
+        self.tree.grid(row=0, sticky='nsew')
         vsb.grid(row=0, column=1, sticky='ns')
         self.tree.configure(yscrollcommand=vsb.set)
         self.tree.bind('<Double-Button>', self.editing)
@@ -205,7 +205,7 @@ class StartPage(tk.Frame):
             self.confirmation.title("Confirm")
             self.confirmation.geometry("%dx%d+%d+%d" % (300, 90, 300, 250))
             recipient = self.tree.item(self.tree.selection())['values'][3]
-            Label(self.confirmation, text="Are you sure, you want to send email to\n" + recipient,
+            Label(self.confirmation, text="Are you sure, you want to send email to\n" + recipient + " ?",
                   font=("Helvetica", 12)).grid(row=0)
             self.confirm_button = Button(self.confirmation, text="Yes", width=5,
                                          command=self.send_email_one)
@@ -263,6 +263,7 @@ class StartPage(tk.Frame):
             msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
 
             smtp.sendmail(self.Email_Address, recipient, msg)
+        self.confirmation.destroy()
 
     def send_email_all(self):
 
@@ -296,6 +297,7 @@ class StartPage(tk.Frame):
                 msg = f'Subject: {subject}\n\n{line1}\n\n{body1}\n\n{body2}\n\n{body3}\n\n{body4}\n\n{body5}\n\n{body6}\n\n{line2}'
 
                 smtp.sendmail(self.Email_Address, recipient, msg)
+        self.confirmation.destroy()
 
     def Import_confirmation(self):
 
@@ -362,6 +364,7 @@ class StartPage(tk.Frame):
             self.show_record()
             self.File_path.delete(0, 'end')
             self.Assign.delete(0, 'end')
+            self.confirmation.destroy()
         except:
             messagebox.showerror("Error!", "Please make sure file path is correct")
             self.confirmation.destroy()
@@ -380,26 +383,26 @@ class StartPage(tk.Frame):
         old_due = self.tree.item(self.tree.selection())['values'][4]
         old_status = self.tree.item(self.tree.selection())['values'][5]
 
-
         self.edit_main = Toplevel()
         self.edit_main.title('Edit')
         self.edit_main.geometry('500x500')
 
         Label(self.edit_main, text='Current Role', font=("Helvetica", 10)).grid(row=0, column=1)
-        Pre_Role = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_position), font=("Helvetica", 10))
-        Pre_Role.grid(row=0, column=2, sticky = "w")
+        Pre_Role = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_position),
+                         font=("Helvetica", 10))
+        Pre_Role.grid(row=0, column=2, sticky="w")
         Label(self.edit_main, text='New Role', font=("Helvetica", 14)).grid(row=1, column=1)
         new_role = Text(self.edit_main, height=1, width=30, font=("Helvetica", 14))
         new_role.grid(row=1, column=2)
         new_role['wrap'] = 'none'
         new_role.insert(END, old_position)
 
-        Label(self.edit_main, text='').grid(row=3, columnspan = 2)
+        Label(self.edit_main, text='').grid(row=3, columnspan=2)
 
         Label(self.edit_main, text='Current Type', font=("Helvetica", 10)).grid(row=4, column=1)
         Pre_Type = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_type),
-                          font=("Helvetica", 10))
-        Pre_Type.grid(row=4, column=2, sticky = "w")
+                         font=("Helvetica", 10))
+        Pre_Type.grid(row=4, column=2, sticky="w")
         Label(self.edit_main, text='New Type', font=("Helvetica", 14)).grid(row=5, column=1)
         new_type = Text(self.edit_main, height=1, width=30, font=("Helvetica", 14))
         new_type.grid(row=5, column=2)
@@ -410,8 +413,8 @@ class StartPage(tk.Frame):
 
         Label(self.edit_main, text='Current Location', font=("Helvetica", 10)).grid(row=7, column=1)
         Pre_Location = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_location),
-                          font=("Helvetica", 10))
-        Pre_Location.grid(row=7, column=2, sticky = "w")
+                             font=("Helvetica", 10))
+        Pre_Location.grid(row=7, column=2, sticky="w")
         Label(self.edit_main, text='New Type', font=("Helvetica", 14)).grid(row=8, column=1)
         new_location = Text(self.edit_main, height=1, width=30, font=("Helvetica", 14))
         new_location.grid(row=8, column=2)
@@ -422,8 +425,8 @@ class StartPage(tk.Frame):
 
         Label(self.edit_main, text='Current Due', font=("Helvetica", 10)).grid(row=10, column=1)
         Pre_Due = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_due),
-                          font=("Helvetica", 10))
-        Pre_Due.grid(row=10, column=2, sticky = "w")
+                        font=("Helvetica", 10))
+        Pre_Due.grid(row=10, column=2, sticky="w")
         Label(self.edit_main, text='New Due', font=("Helvetica", 14)).grid(row=11, column=1)
         new_due = Text(self.edit_main, height=1, width=30, font=("Helvetica", 14))
         new_due.grid(row=11, column=2)
@@ -435,7 +438,7 @@ class StartPage(tk.Frame):
         Label(self.edit_main, text='Current Email', font=("Helvetica", 10)).grid(row=13, column=1)
         Pre_Email = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_recipient),
                           font=("Helvetica", 10))
-        Pre_Email.grid(row=13, column=2, sticky = "w")
+        Pre_Email.grid(row=13, column=2, sticky="w")
         Label(self.edit_main, text='New Email', font=("Helvetica", 14)).grid(row=14, column=1)
         new_email = Text(self.edit_main, height=1, width=30, font=("Helvetica", 14))
         new_email.grid(row=14, column=2)
@@ -446,26 +449,29 @@ class StartPage(tk.Frame):
 
         Label(self.edit_main, text='Current Status', font=("Helvetica", 10)).grid(row=16, column=1)
         Pre_Status = Label(self.edit_main, textvariable=StringVar(self.edit_main, value=old_status),
-                          font=("Helvetica", 10))
-        Pre_Status.grid(row=16, column=2, sticky = "w")
+                           font=("Helvetica", 10))
+        Pre_Status.grid(row=16, column=2, sticky="w")
         Label(self.edit_main, text='New Status', font=("Helvetica", 14)).grid(row=17, column=1)
         new_status = Text(self.edit_main, height=1, width=30, font=("Helvetica", 14))
         new_status.grid(row=17, column=2)
         new_status['wrap'] = 'none'
         new_status.insert(END, old_status)
 
-
         Button(self.edit_main, text='Save', font=("Helvetica", 14), width=8, height=1,
-               command=lambda: self.edit_record(new_role.get(1.0, 'end-1c'), new_type.get(1.0, 'end-1c'),new_location.get(1.0, 'end-1c'),new_email.get(1.0, 'end-1c'),new_due.get(1.0, 'end-1c'),new_status.get(1.0, 'end-1c'),
-                                                old_position,old_type,old_location,old_recipient,old_due,old_status)).place(x = 120, y = 410)
+               command=lambda: self.edit_record(new_role.get(1.0, 'end-1c'), new_type.get(1.0, 'end-1c'),
+                                                new_location.get(1.0, 'end-1c'), new_email.get(1.0, 'end-1c'),
+                                                new_due.get(1.0, 'end-1c'), new_status.get(1.0, 'end-1c'),
+                                                old_position, old_type, old_location, old_recipient, old_due,
+                                                old_status)).place(x=120, y=410)
         Button(self.edit_main, text="Cancel", font=("Helvetica", 14), width=8, height=1,
-               command=self.edit_main.destroy).place(x = 250, y = 410)
+               command=self.edit_main.destroy).place(x=250, y=410)
 
         self.edit_main.focus_set()
         self.edit_main.grab_set()
         self.edit_main.mainloop()
 
-    def edit_record(self, new_role,new_type,new_location,new_email,new_due,new_status,old_position,old_type,old_location,old_recipient,old_due,old_status):
+    def edit_record(self, new_role, new_type, new_location, new_email, new_due, new_status, old_position, old_type,
+                    old_location, old_recipient, old_due, old_status):
 
         Pro_record.update_one(
             {"Role": old_position, "Type": old_type, "Location": old_location, "Assign_To": old_recipient,
