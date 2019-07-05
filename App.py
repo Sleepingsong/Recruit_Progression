@@ -484,12 +484,12 @@ class StartPage(tk.Frame):
 
     def update_status(self):
         Date = datetime.datetime.now().date()
-
+        Delay = "Delay"
         for i in Pro_record.find({}, {"_id": 0, "Due_Date": 1}):
             date_str = datetime.datetime.strptime(i["Due_Date"], '%Y-%m-%d').date()
             if date_str < Date:
-                Pro_record.update_one({"Due_Date": i["Due_Date"]}, {"$set": {"Status": "Delay"}})
-
+                Pro_record.update_many({"Due_Date": i["Due_Date"]}, {"$set": {"Status": Delay}})
+        self.show_record()
     def get_path(self):
         word_file = filedialog.askopenfilename()
         self.File_path.insert(0, word_file)
